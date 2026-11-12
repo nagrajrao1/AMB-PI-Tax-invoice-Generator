@@ -85,6 +85,17 @@
     return String(d).padStart(2, "0") + " " + months[m - 1] + " " + y;
   }
 
+  function docTitle(data) {
+    return data.type === "proforma" ? "Proforma Invoice" : "Tax Invoice";
+  }
+
+  function flightDates(data) {
+    const a = data.flightFrom, b = data.flightTo;
+    if (!a && !b) return "";
+    if (!a || !b || a === b) return formatDate(a || b);
+    return formatDate(a) + " – " + formatDate(b);
+  }
+
   /* ---------- PDF ---------- */
 
   function registerFonts(doc) {
@@ -107,8 +118,8 @@
     registerFonts(doc);
 
     doc.setProperties({
-      title: "Tax Invoice " + (data.invoiceNo || ""),
-      subject: "Tax Invoice — " + cfg.company.name,
+      title: docTitle(data) + " " + (data.invoiceNo || ""),
+      subject: docTitle(data) + " — " + cfg.company.name,
       author: cfg.company.name,
       creator: cfg.company.name + " Invoice Generator",
     });
@@ -161,16 +172,17 @@
     const logoH = logoW * (1096 / 1068);
     doc.addImage(window.AMB_ASSETS.logo, "JPEG", L - 2, 9, logoW, logoH);
 
-    font("MontBold", 24, COLORS.ink);
+    const isProforma = data.type === "proforma";
+    font("MontBold", isProforma ? 21 : 24, COLORS.ink);
     doc.setCharSpace(0.6);
-    doc.text("TAX INVOICE", R, 20, { align: "right" });
+    doc.text(docTitle(data).toUpperCase(), R, 20, { align: "right" });
     doc.setCharSpace(0);
-    label("Original for recipient", R, 25.5, { align: "right" });
+    label(isProforma ? "Not a tax invoice" : "Original for recipient", R, 25.5, { align: "right" });
 
     // Meta block (right aligned key/value rows)
     const meta = [
-      ["Invoice No.", data.invoiceNo || "—"],
-      ["Invoice Date", formatDate(data.date) || "—"],
+      [isProforma ? "Proforma No." : "Invoice No.", data.invoiceNo || "—"],
+      [isProforma ? "Proforma Date" : "Invoice Date", formatDate(data.date) || "—"],
       ["Place of Supply", data.client.stateCode ? `${window.GST_STATES[data.client.stateCode] || ""} (${data.client.stateCode})` : "—"],
     ];
     let my = 33;
@@ -222,6 +234,7 @@
       { text: cl.gstin ? `GSTIN: ${cl.gstin}` : "", f: "MontMed", s: 8.2, col: COLORS.ink, gapBefore: 1 },
       { text: cl.stateCode ? `State: ${window.GST_STATES[cl.stateCode] || ""} (${cl.stateCode})` : "", f: "MontReg", s: 8.2, col: COLORS.muted },
       { text: cl.contact || "", f: "MontReg", s: 8.2, col: COLORS.muted },
+      { text: flightDates(data) ? "Flight date" + (data.flightTo && data.flightTo !== data.flightFrom ? "s" : "") + ": " + flightDates(data) : "", f: "MontSemi", s: 8.2, col: COLORS.goldDeep, gapBefore: 1 },
     ]);
 
     const blockH = (rows) => rows.reduce((h, r, i) => h + lineH(r.s) + (r.gapBefore && i ? r.gapBefore : 0), 0);
@@ -412,14 +425,41 @@
       doc.setLineWidth(0.3);
       doc.line(L, fy - 4, R, fy - 4);
       font("MontMed", 8, COLORS.ink);
-      doc.text(`${c.email}     |     ${c.phone}`, PAGE.w / 2, fy, { align: "center" });
+      const sep = "     |     ";
+      const parts = [c.email, c.phone, c.website].filter(Boolean);
+      const full = parts.join(sep);
+      let fx = PAGE.w / 2 - doc.getTextWidth(full) / 2;
+      parts.forEach((p, i) => {
+        const w = doc.getTextWidth(p);
+        if (p === c.website) {
+          doc.setTextColor(...COLORS.goldDeep);
+          doc.textWithLink(p, fx, fy, { url: "https://" + p.replace(/^https?:\/\//, "") });
+          doc.setTextColor(...COLORS.ink);
+        } else if (p === c.email) {
+          doc.textWithLink(p, fx, fy, { url: "mailto:" + p });
+        } else {
+          doc.text(p, fx, fy);
+        }
+        fx += w;
+        if (i < parts.length - 1) {
+          doc.setTextColor(...COLORS.line);
+          doc.text(sep, fx, fy);
+          doc.setTextColor(...COLORS.ink);
+          fx += doc.getTextWidth(sep);
+        }
+      });
       font("MontReg", 6.6, COLORS.muted);
-      doc.text("This is a computer-generated invoice.", PAGE.w / 2, fy + 4, { align: "center" });
+      doc.text(
+        isProforma
+          ? "This is a proforma invoice and not a tax invoice. A tax invoice will be issued on completion of the service."
+          : "This is a computer-generated invoice.",
+        PAGE.w / 2, fy + 4, { align: "center" }
+      );
     }
     footer();
 
     return { doc, totals: t };
   }
 
-  window.AmbInvoice = { compute, build, amountInWords, formatINR, formatDate };
+  window.AmbInvoice = { compute, build, amountInWords, formatINR, formatDate, flightDates, docTitle };
 })();

@@ -13,10 +13,14 @@
       <img src="assets/logo-mark.png" alt="" class="brand-mark" />
       <div>
         <div class="brand-name">AMBADNYA <span>AVIATION</span></div>
-        <div class="brand-sub">Tax Invoice Generator</div>
+        <div class="brand-sub">Invoice Generator</div>
       </div>
     </div>
     <div class="topbar-meta">
+      <button type="button" id="bell" class="bell" hidden title="Proformas waiting for a tax invoice">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+        <span id="bell-count">0</span>
+      </button>
       <span class="chip" id="chip-gstin"></span>
       <span class="chip chip-gold" id="chip-rate"></span>
     </div>
@@ -24,21 +28,42 @@
 
   <main class="layout">
     <section class="form-col">
+
+      <div id="reminders" class="reminders" hidden>
+        <div class="reminders-head">
+          <span class="reminders-icon">⏰</span>
+          <div>
+            <h2 id="reminders-title">Tax invoices pending</h2>
+            <p>These proformas don't have a tax invoice yet.</p>
+          </div>
+        </div>
+        <ul id="reminder-list"></ul>
+      </div>
+
+      <div id="mode-banner" class="mode-banner" hidden>
+        <span id="mode-text"></span>
+        <button type="button" id="mode-cancel" class="link-btn">Cancel</button>
+      </div>
+
       <form id="invoice-form" novalidate autocomplete="off">
 
         <div class="card">
           <div class="card-head">
             <span class="step step-1">1</span>
-            <div><h2>Invoice</h2><p>Number and date of this invoice</p></div>
+            <div><h2>Document</h2><p>Type, number and date</p></div>
+          </div>
+          <div class="doc-type" role="radiogroup" aria-label="Document type">
+            <label class="type-opt"><input type="radio" name="docType" value="tax" checked /><span><b>Tax Invoice</b><small>Final GST invoice</small></span></label>
+            <label class="type-opt"><input type="radio" name="docType" value="proforma" /><span><b>Proforma Invoice</b><small>Quote / advance request</small></span></label>
           </div>
           <div class="grid-2">
             <label class="field">
-              <span>Invoice number <b>*</b></span>
+              <span id="no-label">Invoice number <b>*</b></span>
               <input id="invoiceNo" name="invoiceNo" placeholder="e.g. 020" required />
               <small id="invoiceNo-hint" class="hint"></small>
             </label>
             <label class="field">
-              <span>Invoice date <b>*</b></span>
+              <span id="date-label">Invoice date <b>*</b></span>
               <input id="date" name="date" type="date" required />
             </label>
           </div>
@@ -47,7 +72,7 @@
         <div class="card">
           <div class="card-head">
             <span class="step step-2">2</span>
-            <div><h2>Client details</h2><p>Who is being billed</p></div>
+            <div><h2>Client details</h2><p>Pick a saved client or type a new one</p></div>
             <div class="card-tools">
               <select id="savedClients" aria-label="Load a saved client">
                 <option value="">Saved clients…</option>
@@ -56,7 +81,8 @@
           </div>
           <label class="field">
             <span>Company name <b>*</b></span>
-            <input id="clientName" name="clientName" placeholder="e.g. KTPB & Co." required />
+            <input id="clientName" name="clientName" placeholder="e.g. KTPB & Co." list="client-names" required />
+            <datalist id="client-names"></datalist>
           </label>
           <label class="field">
             <span>Billing address</span>
@@ -77,18 +103,36 @@
             <span>Contact (optional)</span>
             <input id="clientContact" name="clientContact" placeholder="Contact person, phone or email" />
           </label>
+          <div class="client-actions">
+            <button type="button" id="btn-save-client" class="btn btn-soft">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8" /></svg>
+              Save client
+            </button>
+            <span id="client-msg" class="hint"></span>
+          </div>
         </div>
 
         <div class="card">
           <div class="card-head">
             <span class="step step-3">3</span>
-            <div><h2>Flight details</h2><p>First line prints in bold as the headline</p></div>
+            <div><h2>Flight details</h2><p>Dates print in the client details; first line of the description prints in bold</p></div>
+          </div>
+          <div class="grid-2">
+            <label class="field">
+              <span>Flight date — from <b>*</b></span>
+              <input id="flightFrom" name="flightFrom" type="date" />
+            </label>
+            <label class="field">
+              <span>Flight date — to</span>
+              <input id="flightTo" name="flightTo" type="date" />
+              <small id="flight-hint" class="hint">Leave blank for a single-day flight</small>
+            </label>
           </div>
           <label class="field">
             <span>Description of service <b>*</b></span>
-            <textarea id="flight" name="flight" rows="5" placeholder="VT-BIP Jet charter · Bhopal → Kandla&#10;Date of flight: 1st May 2026&#10;Pax: 6 · Block time: 1h 35m"></textarea>
+            <textarea id="flight" name="flight" rows="4" placeholder="VT-BIP Jet charter · Bhopal → Kandla&#10;Pax: 6 · Block time: 1h 35m"></textarea>
           </label>
-          <label class="field field-inline">
+          <label class="field">
             <span>SAC code (optional)</span>
             <input id="sac" name="sac" placeholder="Leave blank to hide the column" />
           </label>
@@ -119,6 +163,7 @@
 
     <aside class="side-col">
       <div class="summary">
+        <div class="summary-kind" id="s-kind">Tax Invoice</div>
         <div class="summary-row"><span>Taxable value</span><b id="s-taxable">₹ 0.00</b></div>
         <div id="s-taxlines"></div>
         <div class="summary-total"><span>Total payable</span><b id="s-total">₹ 0.00</b></div>
@@ -129,11 +174,12 @@
       <div class="actions">
         <button type="button" id="btn-download" class="btn btn-primary">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" /></svg>
-          Download PDF
+          <span id="btn-download-label">Save &amp; Download PDF</span>
         </button>
-        <button type="button" id="btn-new" class="btn btn-ghost">New invoice</button>
+        <button type="button" id="btn-new" class="btn btn-ghost">New</button>
       </div>
       <div id="form-error" class="form-error" role="alert"></div>
+      <div id="toast" class="toast" role="status"></div>
 
       <div class="preview card">
         <div class="preview-head">
@@ -145,8 +191,21 @@
       </div>
 
       <div class="card history">
-        <div class="preview-head"><h3>Recent invoices</h3></div>
+        <div class="preview-head">
+          <h3>Saved invoices</h3>
+          <div class="filters" role="tablist">
+            <button type="button" class="filter on" data-f="all">All</button>
+            <button type="button" class="filter" data-f="tax">Tax</button>
+            <button type="button" class="filter" data-f="proforma">Proforma</button>
+          </div>
+        </div>
+        <input id="history-search" class="search" placeholder="Search by number or client…" />
         <ul id="history"></ul>
+      </div>
+
+      <div class="card history">
+        <div class="preview-head"><h3>Saved clients</h3></div>
+        <ul id="client-list"></ul>
       </div>
     </aside>
   </main>

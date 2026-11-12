@@ -10,11 +10,26 @@ Or, with the full folder:
 
 1. Open `index.html` in Chrome, Edge or Safari (double-clicking it is enough).
 2. Fill in the four steps:
-   - **Invoice**: your invoice number and the date.
-   - **Client details**: company name, address and GSTIN. The client's state is picked automatically from the first two digits of the GSTIN.
-   - **Flight details**: aircraft, sector, date and anything else. The first line prints in bold as the headline.
+   - **Document**: choose **Tax Invoice** or **Proforma Invoice**, then enter the number and date.
+   - **Client details**: pick a saved client, or type a new one and click **Save client**. Typing a saved client's name fills in the rest. The state is picked from the GSTIN.
+   - **Flight details**: choose the flight date(s) from the calendar (from / to). The dates print in the *Billed To* box. Then describe the service; the first line prints in bold.
    - **Total cost**: the amount *before* GST. 18% GST is added automatically.
-3. Check the live preview, then click **Download PDF**.
+3. Check the live preview, then click **Save & Download PDF**.
+
+### Proforma → tax invoice reminders
+Every proforma you save stays on a **reminder list** at the top of the dashboard, with a red bell in the header, until a tax invoice is raised for it.
+- **Create tax invoice** copies the proforma into a new tax invoice. You enter the tax invoice number and save, and the reminder clears.
+- Reminders are marked **overdue** once the flight's last date has passed.
+- **Dismiss** stops the reminder, for example if the trip was cancelled.
+
+### Saved invoices
+Every saved invoice is listed on the right, with filters for All / Tax / Proforma and a search box.
+- **Edit** loads the invoice into the form. Saving then updates it instead of creating a new one.
+- **PDF** downloads it again.
+- **→ Tax** converts a proforma.
+- **✕** deletes it after you confirm. If you delete a tax invoice that was made from a proforma, that proforma's reminder comes back.
+
+Saving is blocked if the same invoice number already exists for that document type.
 
 ### How GST is applied
 | Client's state | Tax shown on the invoice |
@@ -22,19 +37,12 @@ Or, with the full folder:
 | Maharashtra (GSTIN starts with `27`) | CGST 9% + SGST 9% |
 | Any other state | IGST 18% |
 
-The total is the same either way. The rate defaults to 18% and can be changed for a single invoice.
-
-### Convenience features
-- **Saved clients**: every client you invoice is remembered. Pick one from *Saved clients…* to fill in their details.
-- **Recent invoices**: click one to load it back into the form, for example to re-issue it or copy it.
-- **Next number**: the hint under *Invoice number* suggests the number after your last one.
-- Your work in progress is kept if you close the tab.
-
-All of this is stored only in this browser on this computer. Clearing the browser's site data erases it. The PDFs you download are the permanent record.
+### Where your data lives
+Saved invoices, clients and reminders are stored only in this browser on this computer. Clearing the browser's site data, or opening the file in a different browser, starts empty. The PDFs you download are the permanent record.
 
 ## Changing the fixed details
 
-The company name, GSTIN, PAN, email, phone, bank details and terms & conditions all live in **`assets/config.js`**. Edit that file and reload the page.
+The company name, GSTIN, PAN, email, phone, website, bank details and terms & conditions all live in **`assets/config.js`**. Edit that file and reload the page. Then run `python3 build.py` to refresh the single-file version.
 
 ## Files
 
@@ -47,6 +55,7 @@ The company name, GSTIN, PAN, email, phone, bank details and terms & conditions 
 | `assets/styles.css` | Dashboard styling |
 | `assets/embedded.js` | Logo and fonts embedded so it works offline |
 | `assets/logo.jpg`, `assets/logo-mark.png` | Logo source images |
+| `build.py` | Rebuilds `Ambadnya-Invoice-Generator.html` after changes |
 | `vendor/jspdf.umd.min.js` | [jsPDF](https://github.com/parallax/jsPDF) 4.2.1 (MIT) |
 
 The Montserrat font is licensed under the SIL Open Font License.

@@ -12,6 +12,7 @@ window.AMB_CONFIG = {
     stateName: "Maharashtra",
     email: "info@ambadnyaaviation.com",
     phone: "+91 98675 85054",
+    website: "www.ambadnyaaviation.com",
   },
 
   bank: {
