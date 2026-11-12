@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ambadnya Aviation · Invoice Generator</title>
+  <link rel="icon" href="assets/logo-mark.png" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/logo-mark.png" alt="" class="brand-mark" />
+      <div>
+        <div class="brand-name">AMBADNYA <span>AVIATION</span></div>
+        <div class="brand-sub">Tax Invoice Generator</div>
+      </div>
+    </div>
+    <div class="topbar-meta">
+      <span class="chip" id="chip-gstin"></span>
+      <span class="chip chip-gold" id="chip-rate"></span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="form-col">
+      <form id="invoice-form" novalidate autocomplete="off">
+
+        <div class="card">
+          <div class="card-head">
+            <span class="step step-1">1</span>
+            <div><h2>Invoice</h2><p>Number and date of this invoice</p></div>
+          </div>
+          <div class="grid-2">
+            <label class="field">
+              <span>Invoice number <b>*</b></span>
+              <input id="invoiceNo" name="invoiceNo" placeholder="e.g. 020" required />
+              <small id="invoiceNo-hint" class="hint"></small>
+            </label>
+            <label class="field">
+              <span>Invoice date <b>*</b></span>
+              <input id="date" name="date" type="date" required />
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="step step-2">2</span>
+            <div><h2>Client details</h2><p>Who is being billed</p></div>
+            <div class="card-tools">
+              <select id="savedClients" aria-label="Load a saved client">
+                <option value="">Saved clients…</option>
+              </select>
+            </div>
+          </div>
+          <label class="field">
+            <span>Company name <b>*</b></span>
+            <input id="clientName" name="clientName" placeholder="e.g. KTPB & Co." required />
+          </label>
+          <label class="field">
+            <span>Billing address</span>
+            <textarea id="clientAddress" name="clientAddress" rows="3" placeholder="Building, street&#10;City, district, state – PIN"></textarea>
+          </label>
+          <div class="grid-2">
+            <label class="field">
+              <span>GSTIN</span>
+              <input id="clientGstin" name="clientGstin" maxlength="15" placeholder="24AAEFC3855D1ZT" class="mono upper" />
+              <small id="gstin-hint" class="hint"></small>
+            </label>
+            <label class="field">
+              <span>State (place of supply)</span>
+              <select id="clientState" name="clientState"></select>
+            </label>
+          </div>
+          <label class="field">
+            <span>Contact (optional)</span>
+            <input id="clientContact" name="clientContact" placeholder="Contact person, phone or email" />
+          </label>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="step step-3">3</span>
+            <div><h2>Flight details</h2><p>First line prints in bold as the headline</p></div>
+          </div>
+          <label class="field">
+            <span>Description of service <b>*</b></span>
+            <textarea id="flight" name="flight" rows="5" placeholder="VT-BIP Jet charter · Bhopal → Kandla&#10;Date of flight: 1st May 2026&#10;Pax: 6 · Block time: 1h 35m"></textarea>
+          </label>
+          <label class="field field-inline">
+            <span>SAC code (optional)</span>
+            <input id="sac" name="sac" placeholder="Leave blank to hide the column" />
+          </label>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="step step-4">4</span>
+            <div><h2>Total cost</h2><p>Enter the amount before GST</p></div>
+          </div>
+          <div class="grid-2 grid-amount">
+            <label class="field">
+              <span>Taxable amount (₹) <b>*</b></span>
+              <div class="money"><i>₹</i><input id="amount" name="amount" inputmode="decimal" placeholder="13,60,000" /></div>
+            </label>
+            <label class="field">
+              <span>GST rate (%)</span>
+              <input id="gstRate" name="gstRate" type="number" min="0" max="28" step="0.5" />
+            </label>
+          </div>
+          <label class="field">
+            <span>Notes (optional, printed under amount in words)</span>
+            <input id="notes" name="notes" placeholder="e.g. Advance received ₹ 5,00,000" />
+          </label>
+        </div>
+      </form>
+    </section>
+
+    <aside class="side-col">
+      <div class="summary">
+        <div class="summary-row"><span>Taxable value</span><b id="s-taxable">₹ 0.00</b></div>
+        <div id="s-taxlines"></div>
+        <div class="summary-total"><span>Total payable</span><b id="s-total">₹ 0.00</b></div>
+        <div class="summary-words" id="s-words">Rupees Zero Only</div>
+        <div class="summary-tag" id="s-type">IGST · inter-state</div>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="btn-download" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" /></svg>
+          Download PDF
+        </button>
+        <button type="button" id="btn-new" class="btn btn-ghost">New invoice</button>
+      </div>
+      <div id="form-error" class="form-error" role="alert"></div>
+
+      <div class="preview card">
+        <div class="preview-head">
+          <h3>Live preview</h3>
+          <span class="dot"></span>
+          <a id="open-preview" class="preview-open" href="#" target="_blank" rel="noopener">Open in new tab ↗</a>
+        </div>
+        <iframe id="preview" title="Invoice PDF preview"></iframe>
+      </div>
+
+      <div class="card history">
+        <div class="preview-head"><h3>Recent invoices</h3></div>
+        <ul id="history"></ul>
+      </div>
+    </aside>
+  </main>
+
+  <script src="vendor/jspdf.umd.min.js"></script>
+  <script src="assets/embedded.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/invoice.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
