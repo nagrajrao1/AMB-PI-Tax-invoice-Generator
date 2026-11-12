@@ -4,6 +4,10 @@ A dashboard for creating Ambadnya Aviation tax invoices as PDFs. It runs entirel
 
 ## How to use
 
+**Quickest:** download `Ambadnya-Invoice-Generator.html` (a single self-contained file) and double-click it.
+
+Or, with the full folder:
+
 1. Open `index.html` in Chrome, Edge or Safari (double-clicking it is enough).
 2. Fill in the four steps:
    - **Invoice**: your invoice number and the date.
